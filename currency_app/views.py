@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 
 def get_exchange_rate():
+    load_dotenv() 
     api_key = os.getenv("API_KEY")
     response = requests.get("https://api.currencyapi.com/v3/latest", params={"base_currency": "USD", "currencies": "RUB", "apikey": api_key})
     data = response.json()
