@@ -7,6 +7,7 @@ from .models import ExchangeRate
 from django.core.cache import cache
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 
 def get_exchange_rate():
     load_dotenv() 
@@ -15,9 +16,15 @@ def get_exchange_rate():
     data = response.json()
     return data["data"]["RUB"]["value"]
 
-def get_current_usd(request):
+def get_current_usd(request):    
+    last_record = ExchangeRate.objects.last()
+
+    if not last_record or timezone.now() - last_record.last_request_time > timedelta(seconds=10):
+        rate = get_exchange_rate()
+        ExchangeRate.objects.create(rate=rate, last_request_time=timezone.now())
+    else:
+        rate = last_record.rate
     rate = get_exchange_rate()
-    ExchangeRate.objects.create(rate=rate)
     history = ExchangeRate.objects.all().order_by('-timestamp')[:10]
     history_data = [{"rate": record.rate, "timestamp": record.timestamp} for record in history]
 
